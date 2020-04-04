@@ -1,8 +1,8 @@
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField, ValidationError
-from wtforms.validators import DataRequired, AnyOf, URL, Length
 import re
+from wtforms.validators import DataRequired, AnyOf, URL, Length
 
 state_choices = [
     ('AL', 'AL'),
@@ -60,6 +60,9 @@ state_choices = [
 genres_choices = [
     ('Alternative', 'Alternative'),
     ('Blues', 'Blues'),
+    ('Pop', 'Pop'),
+    ('Punk', 'Punk'),
+    ('R&B', 'R&B'),
     ('Classical', 'Classical'),
     ('Country', 'Country'),
     ('Electronic', 'Electronic'),
@@ -70,9 +73,6 @@ genres_choices = [
     ('Instrumental', 'Instrumental'),
     ('Jazz', 'Jazz'),
     ('Musical Theatre', 'Musical Theatre'),
-    ('Pop', 'Pop'),
-    ('Punk', 'Punk'),
-    ('R&B', 'R&B'),
     ('Reggae', 'Reggae'),
     ('Rock n Roll', 'Rock n Roll'),
     ('Soul', 'Soul'),
@@ -127,18 +127,16 @@ class VenueForm(FlaskForm):
         'image_link', validators=[DataRequired(), URL(), Length(max=500)]
     )
 
-
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
 class ArtistForm(FlaskForm):
-    def validate_phone(form, field):
-        if not re.search(r"^[0-9]{3}-[0-9]{3}-[0-9]{4}$", field.data):
-            raise ValidationError("Invalid phone number.")
-
     def validate_genres(form, field):
         genres_values = [choice[1] for choice in genres_choices]
         for value in field.data:
             if value not in genres_values:
-                raise ValidationError('Invalid genres value.')
+                raise ValidationError('Invalid genres value')
+
+    def validate_phone(form, field):
+        if not re.search(r"^[0-9]{3}-[0-9]{3}-[0-9]{4}$", field.data):
+            raise ValidationError("Invalid phone number")
 
     name = StringField(
         'name', validators=[DataRequired(), Length(max=120)]
@@ -146,13 +144,13 @@ class ArtistForm(FlaskForm):
     city = StringField(
         'city', validators=[DataRequired(), Length(max=120)]
     )
+    phone = StringField(
+        'phone', validators=[DataRequired()]
+    )
     state = SelectField(
         # TODO implement validation logic for state
         'state', validators=[DataRequired(), Length(max=120)],
         choices=state_choices
-    )
-    phone = StringField(
-        'phone', validators=[DataRequired()]
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction
@@ -165,26 +163,25 @@ class ArtistForm(FlaskForm):
     seeking_description = StringField(
         'seeking_description', validators=[Length(max=500)]
     )
+    facebook_link = StringField(
+        'facebook_link', validators=[URL()]
+    )
     website = StringField(
         'website', validators=[DataRequired(), URL(), Length(max=120)]
     )
     image_link = StringField(
         'image_link', validators=[DataRequired(), URL(), Length(max=500)]
     )
-    facebook_link = StringField(
-        'facebook_link', validators=[URL()]
-    )
-
 
 class ShowForm(FlaskForm):
+    start_time = DateTimeField(
+        'start_time',
+        validators=[DataRequired()],
+        default=datetime.today()
+    )
     artist_id = StringField(
         'artist_id'
     )
     venue_id = StringField(
         'venue_id'
-    )
-    start_time = DateTimeField(
-        'start_time',
-        validators=[DataRequired()],
-        default=datetime.today()
     )

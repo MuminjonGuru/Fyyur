@@ -8,27 +8,23 @@ from datetime import *
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
+from flask_wtf import FlaskForm
 import logging
 from logging import Formatter, FileHandler
-from flask_wtf import FlaskForm
 from forms import *
 from models import setup_db, Venue, Artist, Show
-from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import aliased
+from sqlalchemy import func
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
-
 app = Flask(__name__)
 moment = Moment(app)
 db = setup_db(app)
-
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
-
-
 def format_datetime(value, format='medium'):
     date = dateutil.parser.parse(str(value))
     if format == 'full':
@@ -37,9 +33,7 @@ def format_datetime(value, format='medium'):
         format="EE MM, dd, y h:mma"
     return babel.dates.format_datetime(date, format)
 
-
 app.jinja_env.filters['datetime'] = format_datetime
-
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
@@ -54,10 +48,10 @@ def venues():
     # TODO: replace with real venues data,
     # num_shows should be aggregated based on number of upcoming shows per venue.
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    venue_query = Venue.query.group_by(Venue.id, Venue.state, Venue.city).all()
+    vq = Venue.query.group_by(Venue.id, Venue.state, Venue.city).all()
     city_and_state = ''
     data = []
-    for venue in venue_query:
+    for venue in vq:
         upcoming_shows = venue.shows.filter(Show.start_time > current_time).all()
         if city_and_state == venue.city + venue.state:
             data[len(data) - 1]["venues"].append({
@@ -84,8 +78,8 @@ def search_venues():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # search for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-    venue_query = Venue.query.filter(Venue.name.ilike('%' + request.form['search_term'] + '%'))
-    venue_list = list(map(Venue.short, venue_query))
+    vq = Venue.query.filter(Venue.name.ilike('%' + request.form['search_term'] + '%'))
+    venue_list = list(map(Venue.short, vq))
     response = {
       "count": len(venue_list),
       "data": venue_list
@@ -97,9 +91,9 @@ def search_venues():
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
     # TODO: replace with real venue data from the venues table, using venue_id
-    venue_query = Venue.query.get(venue_id)
-    if venue_query:
-        venue_details = Venue.details(venue_query)
+    vq = Venue.query.get(venue_id)
+    if vq:
+        venue_details = Venue.details(vq)
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         new_shows_query = Show.query.options(db.joinedload(Show.Venue)).filter(Show.venue_id == venue_id).filter(Show.start_time > current_time).all()
         new_shows_list = list(map(Show.artist_details, new_shows_query))
@@ -129,8 +123,8 @@ def create_venue_submission():
     form = VenueForm(request.form)
     if form.validate():
         try:
-            seeking_talent = False
             seeking_description = ''
+            seeking_talent = False
             if 'seeking_talent' in request.form:
                 seeking_talent = request.form['seeking_talent'] == 'y'
             if 'seeking_description' in request.form:
@@ -174,8 +168,8 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
     # TODO: replace with real data returned from querying the database
-    artist_query = Artist.query.all()
-    artist_list = list(map(Artist.short, artist_query))
+    aq = Artist.query.all()
+    artist_list = list(map(Artist.short, aq))
     return render_template('pages/artists.html', artists=artist_list)
 
 
@@ -184,8 +178,8 @@ def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # search for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
-    artist_query = Artist.query.filter(Artist.name.ilike('%' + request.form['search_term'] + '%'))
-    artist_list = list(map(Artist.short, artist_query))
+    aq = Artist.query.filter(Artist.name.ilike('%' + request.form['search_term'] + '%'))
+    artist_list = list(map(Artist.short, aq))
     response = {
       "count": len(artist_list),
       "data": artist_list
@@ -201,9 +195,9 @@ def search_artists():
 def show_artist(artist_id):
     # shows the venue page with the given venue_id
     # TODO: replace with real venue data from the venues table, using venue_id
-    artist_query = Artist.query.get(artist_id)
-    if artist_query:
-        artist_details = Artist.details(artist_query)
+    aq = Artist.query.get(artist_id)
+    if aq:
+        artist_details = Artist.details(aq)
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         new_shows_query = Show.query.options(db.joinedload(Show.Artist)).filter(Show.artist_id == artist_id).filter(Show.start_time > current_time).all()
         new_shows_list = list(map(Show.venue_details, new_shows_query))
@@ -222,9 +216,9 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
     form = ArtistForm()
     # TODO: populate form with fields from artist with ID <artist_id>
-    artist_query = Artist.query.get(artist_id)
-    if artist_query:
-        artist_details = Artist.details(artist_query)
+    aq = Artist.query.get(artist_id)
+    if aq:
+        artist_details = Artist.details(aq)
         form.name.data = artist_details["name"]
         form.genres.data = artist_details["genres"]
         form.city.data = artist_details["city"]
@@ -275,9 +269,9 @@ def edit_artist_submission(artist_id):
 def edit_venue(venue_id):
     form = VenueForm()
     # TODO: populate form with values from venue with ID <venue_id>
-    venue_query = Venue.query.get(venue_id)
-    if venue_query:
-        venue_details = Venue.details(venue_query)
+    vq = Venue.query.get(venue_id)
+    if vq:
+        venue_details = Venue.details(vq)
         form.name.data = venue_details["name"]
         form.genres.data = venue_details["genres"]
         form.address.data = venue_details["address"]
@@ -331,15 +325,14 @@ def create_artist_form():
     form = ArtistForm()
     return render_template('forms/new_artist.html', form=form)
 
-
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # called upon submitting the new artist listing form
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
     try:
-        seeking_venue = False
         seeking_description = ''
+        seeking_venue = False
         if 'seeking_venue' in request.form:
             seeking_venue = request.form['seeking_venue'] == 'y'
         if 'seeking_description' in request.form:
@@ -366,7 +359,6 @@ def create_artist_submission():
 
     return render_template('pages/home.html')
 
-
 #  Shows
 #  ----------------------------------------------------------------
 
@@ -379,13 +371,11 @@ def shows():
     shows_list = list(map(Show.details, shows_query))
     return render_template('pages/shows.html', shows=shows_list)
 
-
 @app.route('/shows/create')
 def create_shows():
     # renders form. do not touch.
     form = ShowForm()
     return render_template('forms/new_show.html', form=form)
-
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
