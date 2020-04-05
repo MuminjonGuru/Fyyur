@@ -6,7 +6,15 @@ import json
 import dateutil.parser
 from datetime import *
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import ( 
+    Flask,
+    render_template,
+    request,
+    Response,
+    flash,
+    redirect,
+    url_for
+)
 from flask_moment import Moment
 from flask_wtf import FlaskForm
 import logging
@@ -78,14 +86,14 @@ def search_venues():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # search for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-    vq = Venue.query.filter(Venue.name.ilike('%' + request.form['search_term'] + '%'))
-    venue_list = list(map(Venue.short, vq))
+    query = request.form.get('search')
+    results = Venue.query.filter(Venue.name.ilike('%'+query+'%')).all()
+    venue_list = list(map(Venue.short, query))
     response = {
       "count": len(venue_list),
       "data": venue_list
     }
     return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
-
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -113,44 +121,37 @@ def create_venue_form():
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
-
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
-    # on successful db insert, flash success
-    # flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    form = VenueForm(request.form)
-    if form.validate():
-        try:
-            seeking_description = ''
-            seeking_talent = False
-            if 'seeking_talent' in request.form:
-                seeking_talent = request.form['seeking_talent'] == 'y'
-            if 'seeking_description' in request.form:
-                seeking_description = request.form['seeking_description']
-            new_venue = Venue(
-                name=request.form['name'],
-                genres=request.form.getlist('genres'),
-                address=request.form['address'],
-                city=request.form['city'],
-                state=request.form['state'],
-                phone=request.form['phone'],
-                website=request.form['website'],
-                facebook_link=request.form['facebook_link'],
-                image_link=request.form['image_link'],
-                seeking_talent=seeking_talent,
-                seeking_description=seeking_description,
-            )
-            Venue.insert(new_venue)
-            flash('Venue ' + request.form['name'] + ' was successfully listed!')
-        except SQLAlchemyError as e:
-            # TODO: on unsuccessful db insert, flash an error instead.
-            # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-            # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-            flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+    try:
+        seeking_talent = False
+        seeking_description = ''
+        if 'seeking_talent' in request.form:
+            seeking_talent = request.form['seeking_talent'] == 'y'
+        if 'seeking_description' in request.form:
+            seeking_description = request.form['seeking_description']
+        new_venue = Venue(
+            name=request.form['name'],
+            genres=request.form.getlist('genres'),
+            address=request.form['address'],
+            city=request.form['city'],
+            state=request.form['state'],
+            phone=request.form['phone'],
+            website=request.form['website'],
+            facebook_link=request.form['facebook_link'],
+            image_link=request.form['image_link'],
+            seeking_talent=seeking_talent,
+            seeking_description=seeking_description,
+        )
+        Venue.insert(new_venue)
+        flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    except SQLAlchemyError as e:
+        print(e)  # logging
+        flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+    
     return render_template('pages/home.html')
-
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -260,7 +261,7 @@ def edit_artist_submission(artist_id):
             Artist.update(artist_data)
             return redirect(url_for('show_artist', artist_id=artist_id))
         else:
-            print(form.errors)
+            print(sys.exc_info())
     return render_template('errors/404.html'), 404
     # return redirect(url_for('show_artist', artist_id=artist_id))
 
@@ -350,11 +351,9 @@ def create_artist_submission():
             seeking_description=seeking_description,
         )
         Artist.insert(new_artist)
-        # on successful db insert, flash success
         flash('Artist ' + request.form['name'] + ' was successfully listed!')
     except SQLAlchemyError as e:
-        # TODO: on unsuccessful db insert, flash an error instead.
-        # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+        print(e) # logging
         flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
 
     return render_template('pages/home.html')
