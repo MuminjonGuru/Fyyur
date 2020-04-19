@@ -9,7 +9,7 @@ Your job is to build out the data models to power the API endpoints for the Fyyu
 
 ### Overview
 
-This app is nearly complete. It is only missing one thing… real data! While the views and controllers are defined in this application, it is missing models and model interactions to be able to store retrieve, and update data from a database. By the end of this project, you should have a fully functioning site that is at least capable of doing the following, if not more, using a PostgreSQL database:
+This app is nearly complete. It is only missing one thing… real data! While the views and controllers are defined in this application, it is missing models and model interactions to be able to store retrieve and update data from a database. By the end of this project, you should have a fully functioning site that is at least capable of doing the following, if not more, using a PostgreSQL database:
 
 * creating new venues, artists, and creating new shows.
 * searching for venues and artists.
@@ -32,7 +32,7 @@ Our tech stack will include:
   ```sh
   ├── README.md
   ├── app.py *** the main driver of the app. Includes your SQLAlchemy models.
-                    "python app.py" to run after installing dependences
+                    "python app.py" to run after installing dependencies
   ├── config.py *** Database URLs, CSRF generation, etc
   ├── error.log
   ├── forms.py *** Your forms
@@ -58,7 +58,7 @@ Overall:
 
 
 Highlight folders:
-* `templates/pages` -- (Already complete.) Defines the pages that are rendered to the site. These templates render views based on data passed into the template’s view, in the controllers defined in `app.py`. These pages successfully represent the data to the user, and are already defined for you.
+* `templates/pages` -- (Already complete.) Defines the pages that are rendered to the site. These templates render views based on data passed into the template’s view, in the controllers defined in `app.py`. These pages successfully represent the data to the user and are already defined for you.
 * `templates/layouts` -- (Already complete.) Defines the layout that a page can be contained in to define footer and header code for a given page.
 * `templates/forms` -- (Already complete.) Defines the forms used to create new artists, shows, and venues.
 * `app.py` -- (Missing functionality.) Defines routes that match the user’s URL, and controllers which handle data and renders views to the user. This is the main file you will be working on to connect to and manipulate the database and render views with data to the user, based on the URL.
